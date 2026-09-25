@@ -105,3 +105,35 @@ Do not define a recipe for a shared target. Make keeps the last recipe it reads 
 Terraform runs with `-chdir=$(TERRAFORM_DIR)`, so it resolves relative paths in `TERRAFORM_VAR_FILES` and `TERRAFORM_*_ARGS` against `TERRAFORM_DIR`. It does not resolve them against the directory where you run `make`.
 
 The variables use the `TERRAFORM_` prefix, not `TF_`. Terraform reads `TF_*` environment variables itself. For example, `TF_WORKSPACE` overrides workspace selection.
+
+## Go (`golang.mk`)
+
+`golang.mk` formats, lints, tests, and builds one Go module. It uses only the Go toolchain. To list its targets, run `make help`.
+
+### Go variables
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `GO_BIN` | `go` | Go executable. `gofmt` comes from the same toolchain's `GOROOT`. |
+| `GO_DIR` | `.` | Module directory. Every command runs from here. |
+| `GO_BUILD_PKG` | `.` | Package that `go-build` compiles, for example `./cmd/api`. |
+| `GO_BUILD_OUTPUT` | `$(CURDIR)/bin/` | Output path. If it ends with `/`, Go names the binary after the package. |
+| `GO_BUILD_OS` | (empty) | `GOOS` for `go-build` only. If empty, Go builds for the host OS. |
+| `GO_BUILD_ARCH` | (empty) | `GOARCH` for `go-build` only. If empty, Go builds for the host architecture. |
+| `GO_BUILD_CGO_ENABLED` | (empty) | `CGO_ENABLED` for `go-build` only, `0` or `1`. If empty, Go uses the value from the environment. |
+| `GO_BUILD_FLAGS` | (empty) | Extra flags for `go build`, for example `-trimpath -ldflags="-s -w"`. |
+| `GO_TEST_PKGS` | `./...` | Packages that `go-test` runs. |
+| `GO_TEST_FLAGS` | (empty) | Extra flags for `go test`, for example `-v -race -tags=integration`. |
+| `GO_COVER_PROFILE` | `cover.out` | Coverage profile that `go-test` writes. If empty, `go-test` does not collect coverage. |
+| `GO_COVER_HTML` | `cover.html` | HTML report that `go-cover-html` writes. |
+
+Commands run from `GO_DIR`, so Go resolves relative paths in `GO_BUILD_OUTPUT`, `GO_COVER_PROFILE`, and `GO_COVER_HTML` against `GO_DIR`.
+
+`GO_BUILD_OS`, `GO_BUILD_ARCH`, and `GO_BUILD_CGO_ENABLED` apply only to `go-build`. If you export `GOOS` instead, `go test` and `go vet` also compile for that OS, and `go test` cannot run a binary built for another OS.
+
+To build a second binary, call `go-build` again with other values:
+
+```make
+build-seed:
+	$(MAKE) go-build GO_BUILD_PKG=./cmd/seed GO_BUILD_OUTPUT=$(CURDIR)/bin/seed
+```
