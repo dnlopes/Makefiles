@@ -71,12 +71,10 @@ $(tools_dir)/.spec/%: tools-force
 	@mkdir -p $(@D)
 	@printf '%s\n' '$(call tool_spec_valid,$*)' | cmp -s - $@ || printf '%s\n' '$(call tool_spec_valid,$*)' > $@
 
-# go install leaves an identical binary untouched, which would keep it older than its spec file and reinstall it on every run.
 $(tools_dir)/%: $(tools_dir)/.spec/%
 	@echo "Installing $* ($(call tool_spec_valid,$*))"
 	@GOBIN=$(tools_dir) $(GO_BIN) install $(call tool_spec_valid,$*)
 	@[ -f $@ ] || { echo "go install produced no $(@F) binary: NAME in TOOLS must match the binary name" >&2; exit 1; }
-	@touch $@
 
 .PRECIOUS: $(tools_dir)/.spec/%
 .PHONY: help tools tools-clean tools-force
