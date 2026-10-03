@@ -83,6 +83,38 @@ To list your own targets under a heading in `make help`, add a `##@ Heading` lin
 
 Do not define a recipe for a shared target. Make keeps the last recipe it reads and prints `warning: overriding commands for target`.
 
+## Tools (`common.mk`)
+
+`common.mk` installs Go tools into a project-local directory, so every contributor and CI run uses the same versions. It needs only the Go toolchain. Every vertical includes `common.mk`, so the tools targets are available in any project that includes one.
+
+Declare the tools in `TOOLS` as `NAME=MODULE@VERSION`, where `NAME` is the binary that `go install` produces:
+
+```make
+TOOLS := mockery=github.com/vektra/mockery/v2@v2.46.0
+include .makefiles/golang.mk
+
+go-mocks: ## Generate Go mocks
+	$(call go-tool,mockery)
+```
+
+`$(call go-tool,NAME)` installs the tool if needed and runs it from `GO_DIR`. Put its arguments after the call. Without `golang.mk`, use `mk-tool` as a prerequisite and in the recipe:
+
+```make
+include .makefiles/common.mk
+gen: $(call mk-tool,mockery)
+	$(call mk-tool,mockery)
+```
+
+`$(call mk-tool,NAME)` expands to the absolute path of the tool. As a prerequisite, it installs the tool when it is missing or when its entry in `TOOLS` changed. Make stops with an error if `NAME` is not in `TOOLS`. Run `make tools` to install every declared tool, and `make tools-clean` to remove them.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `TOOLS` | (empty) | Space-separated `NAME=MODULE@VERSION` entries. |
+| `TOOLS_DIR` | `$(CURDIR)/bin` | Install directory. Set it before the include. Add it to `.gitignore`. |
+| `GO_BIN` | `go` | Go executable that runs `go install`. |
+
+Use a fixed version. Changing an entry reinstalls that tool, but `@latest` never changes, so make does not check for a newer release. `make tools-clean` removes only the declared tools and their records, so other files in `TOOLS_DIR`, such as `go-build` output, stay.
+
 ## Terraform (`terraform.mk`)
 
 `terraform.mk` runs Terraform against one root module. It requires Terraform 1.4 or later. To use OpenTofu, set `TERRAFORM_BIN=tofu`. To list its targets, run `make help`.
