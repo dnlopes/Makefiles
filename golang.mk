@@ -23,10 +23,6 @@
 #                            coverage.                                                 Default: cover.out
 #     GO_COVER_HTML          HTML report that go-cover-html writes.                    Default: cover.html
 #
-#   Functions
-#     $(call go-tool,NAME)   Install tool NAME from TOOLS if needed, then run it from GO_DIR. Put the tool's
-#                            arguments after the call: $(call go-tool,mockery) --all
-#
 #   Targets: run `make help`.
 
 golang_mk_dir := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
@@ -48,8 +44,6 @@ GO_COVER_HTML        ?= cover.html
 # gofmt from GO_BIN's GOROOT, so formatting matches the selected toolchain rather than whichever gofmt is on PATH.
 golang_gofmt     = "$$($(GO_BIN) env GOROOT)/bin/gofmt"
 golang_build_env = $(if $(GO_BUILD_OS),GOOS=$(GO_BUILD_OS)) $(if $(GO_BUILD_ARCH),GOARCH=$(GO_BUILD_ARCH)) $(if $(GO_BUILD_CGO_ENABLED),CGO_ENABLED=$(GO_BUILD_CGO_ENABLED))
-
-go-tool = $(MAKE) --no-print-directory -f $(firstword $(MAKEFILE_LIST)) $(call mk-tool,$(1)) && cd $(GO_DIR) && $(call mk-tool,$(1))
 
 ##@ Go
 go-fmt: ## Rewrite Go files with gofmt -s

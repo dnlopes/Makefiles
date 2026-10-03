@@ -85,24 +85,16 @@ Do not define a recipe for a shared target. Make keeps the last recipe it reads 
 
 ## Tools (`common.mk`)
 
-`common.mk` installs Go tools into a project-local directory, so every contributor and CI run uses the same versions. It needs only the Go toolchain. Every vertical includes `common.mk`, so the tools targets are available in any project that includes one.
+`common.mk` installs Go tools into a project-local directory, so every contributor and CI run uses the same versions. It needs only the Go toolchain. Every vertical includes `common.mk`, so the tools targets are available in any project that includes one, and you can include `common.mk` on its own.
 
 Declare the tools in `TOOLS` as `NAME=MODULE@VERSION`, where `NAME` is the binary that `go install` produces:
 
 ```make
 TOOLS := mockery=github.com/vektra/mockery/v2@v2.46.0
-include .makefiles/golang.mk
-
-go-mocks: ## Generate Go mocks
-	$(call go-tool,mockery)
-```
-
-`$(call go-tool,NAME)` installs the tool if needed and runs it from `GO_DIR`. Put its arguments after the call. Without `golang.mk`, use `mk-tool` as a prerequisite and in the recipe:
-
-```make
 include .makefiles/common.mk
-gen: $(call mk-tool,mockery)
-	$(call mk-tool,mockery)
+
+go-mocks: $(call mk-tool,mockery) ## Generate Go mocks
+	$(call mk-tool,mockery) --all
 ```
 
 `$(call mk-tool,NAME)` expands to the absolute path of the tool. As a prerequisite, it installs the tool when it is missing or when its entry in `TOOLS` changed. Make stops with an error if `NAME` is not in `TOOLS`. Run `make tools` to install every declared tool, and `make tools-clean` to remove them.
